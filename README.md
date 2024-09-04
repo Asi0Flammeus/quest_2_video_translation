@@ -16,8 +16,36 @@ This type of video is used in every chapter of any courses in PlanB Network, so 
 ## Backlog
 
 - [ ] ppt vo -> ppt translated
-- [ ] mp3 vo -> txt vo -> txt translated -> mp3 translaled
+- [x] mp3 vo -> txt vo -> txt translated -> mp3 translaled
+  - use of `audio_translator.py`
 - [x] ppt -> png
   - use of `ppt_2_png.sh`
-- [ ] png + mp3 -> mp4
+- [x] png + mp3 -> mp4
+  - use f `image_audio_2_video.py`
 
+## Requirements
+
+- only tested on linus distribution
+- for bash scripts you need this package installed
+  - LibreOffice - 24.2.5.2
+  - ImageMagick - 6.9.12.98
+- for python scripts, just create a dedicated environnment and use the command `pip3 install -r requirements.txt` to install the required librairies
+
+---
+
+# Audio Translator
+
+## Initial Goal
+
+Develop a Python program to automatically transcribe all segmented audio files using a text-to-speech API, simply said an audio-2-audio Bot with translation in between.
+
+## Initial Strategic Plan
+
+- write a single file called `playground.py` for quick MVP, though constant will be placed in `config.py`
+- encapsulate atomic process using simple functions
+- will use `LLM-Translator` and `LLM-Scribe` if needed
+- use folder `projects` to centralize all file produced
+  - `/projects/project-name/audios/`: initial audio to translate
+  - `/projects/project-name/transcripts/`: corresponding transcripts
+  - `/projects/project-name/translations/`: corresponding translations
+  - `/projects/project-name/outputs/`: audios produced with 11labs api
