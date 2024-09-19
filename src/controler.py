@@ -2,6 +2,9 @@ import sys
 import os
 import re
 import yaml
+import subprocess
+
+from pptx_translator import translate_pptx
 
 # Root directory
 ROOT_DIR = "../test/"  # Replace this with your actual root directory path
@@ -185,6 +188,30 @@ def prepare_target_folders(course_dir, source_lang, target_langs, source_version
             print(f"Created new version {new_version} for {target_lang}")
     return target_version_paths
 
+def convert_pptx_to_png(pptx_path):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    bash_script_path = os.path.join(current_dir, 'pptx_2_png.sh')
+    if not os.path.exists(bash_script_path):
+        print(f"Error: Bash script not found at {bash_script_path}")
+        return
+
+    command = ['/bin/bash', bash_script_path, pptx_path]
+    try:
+        result = subprocess.run(command, check=True, text=True, capture_output=True)
+        print(result.stdout)
+        if result.stderr:
+            print("Errors:")
+            print(result.stderr)
+    
+    except subprocess.CalledProcessError as e:
+        print(f"Error running the script: {e}")
+        if e.output:
+            print("Output:")
+            print(e.output)
+        if e.stderr:
+            print("Error output:")
+            print(e.stderr)
+
 def translate_pptx_in_subfolders(source_version_path, source, target_version_path, target):
     for subfolder in os.listdir(source_version_path):
         subfolder_path = os.path.join(source_version_path, subfolder)
@@ -197,8 +224,9 @@ def translate_pptx_in_subfolders(source_version_path, source, target_version_pat
                 os.makedirs(target_subfolder_path, exist_ok=True)
                 target_pptx_path = os.path.join(target_subfolder_path, pptx_file)
 
-                #translate_pptx(source_pptx_path, target_pptx_path)
-                # export_pptx(target_pptx_path)
+                target_version = os.path.basename(os.path.normpath(target_version_path))
+                translate_pptx(source_pptx_path, target_pptx_path, source, target, target_version, use_exception=True)
+                convert_pptx_to_png(target_pptx_path)
 
                 print(f"Translated {pptx_file} from {source} to {target}")
 
