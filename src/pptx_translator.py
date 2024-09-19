@@ -95,7 +95,7 @@ def count_total_runs(prs):
                     total += len(paragraph.runs)
     return total
 
-prs = Presentation('../test/lnp201-en.pptx')
+prs = Presentation('../test/22.pptx')
 code_language = "zh-Hans"
 total_runs = count_total_runs(prs)
 progress_bar = tqdm(total=total_runs, unit='run', desc='Translating')
@@ -118,4 +118,4 @@ for slide in prs.slides:
                 
 
 progress_bar.close()
-prs.save(f"../test/translated_presentation_{code_language}.pptx")
+prs.save(f"../test/btc204_{code_language}.pptx")
