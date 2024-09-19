@@ -154,6 +154,7 @@ def prepare_target_folders(course_dir, source_lang, target_langs, source_version
         print(f"Error: v001 folder not found for source language {source_lang}")
         return
 
+    target_version_paths = []
     for target_lang in target_langs:
         target_lang_path = os.path.join(course_dir, target_lang)
         
@@ -175,12 +176,32 @@ def prepare_target_folders(course_dir, source_lang, target_langs, source_version
                 new_version = f'v{new_version_num:03d}'
             
             new_version_path = os.path.join(target_lang_path, new_version)
+            target_version_paths.append(new_version_path)
             os.makedirs(new_version_path)
             
             # Copy structure from source_version
             source_version_path = os.path.join(course_dir, source_lang, source_version)
             copy_folder_structure(source_version_path, new_version_path)
             print(f"Created new version {new_version} for {target_lang}")
+    return target_version_paths
+
+def translate_pptx_in_subfolders(source_version_path, source, target_version_path, target):
+    for subfolder in os.listdir(source_version_path):
+        subfolder_path = os.path.join(source_version_path, subfolder)
+        if os.path.isdir(subfolder_path):
+            pptx_file = f"{subfolder}.pptx"
+            source_pptx_path = os.path.join(subfolder_path, pptx_file)
+
+            if os.path.exists(source_pptx_path):
+                target_subfolder_path = os.path.join(target_version_path, subfolder)
+                os.makedirs(target_subfolder_path, exist_ok=True)
+                target_pptx_path = os.path.join(target_subfolder_path, pptx_file)
+
+                #translate_pptx(source_pptx_path, target_pptx_path)
+                # export_pptx(target_pptx_path)
+
+                print(f"Translated {pptx_file} from {source} to {target}")
+
 
 if __name__ == "__main__":
     print("Welcome to the Course, Language, and Version Selection Tool")
@@ -201,7 +222,15 @@ if __name__ == "__main__":
     print_separator()
     
     # Prepare target folders
-    prepare_target_folders(selected_dir, source, targets, source_version)
+    source_version_path = f"{selected_dir}/{source}/{source_version}"
+    target_version_paths = prepare_target_folders(selected_dir, source, targets, source_version)
+    for i , target in enumerate(targets):
+        translate_pptx_in_subfolders(source_version_path, source, target_version_paths[i], target)
+
+        # transcript if necessary the source mp3
+        # translate transcripts 
+        # generate audio 
     
+
     print("Target folders have been prepared.")
     print("Thank you for using the selection tool!")
