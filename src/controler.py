@@ -4,17 +4,11 @@ import re
 import yaml
 import subprocess
 
+from supported_languages import *
 from pptx_translator import translate_pptx
 
 # Root directory
 ROOT_DIR = "../test/"  # Replace this with your actual root directory path
-
-language_codes = {
-    "cs": "Czech", "de": "German", "en": "English", "es": "Spanish",
-    "et": "Estonian", "fi": "Finnish", "fr": "French", "id": "Indonesian",
-    "it": "Italian", "ja": "Japanese", "pt": "Portuguese", "ru": "Russian",
-    "vi": "Vietnamese", "zh-Hans": "Simplified Chinese"
-}
 
 numbered_languages = list(enumerate(language_codes.items(), 1))
 
@@ -225,6 +219,7 @@ def translate_pptx_in_subfolders(source_version_path, source, target_version_pat
                 target_pptx_path = os.path.join(target_subfolder_path, pptx_file)
 
                 target_version = os.path.basename(os.path.normpath(target_version_path))
+                print(target_pptx_path)
                 translate_pptx(source_pptx_path, target_pptx_path, source, target, target_version, use_exception=True)
                 convert_pptx_to_png(target_pptx_path)
 
@@ -253,6 +248,7 @@ if __name__ == "__main__":
     source_version_path = f"{selected_dir}/{source}/{source_version}"
     target_version_paths = prepare_target_folders(selected_dir, source, targets, source_version)
     for i , target in enumerate(targets):
+        print(i)
         translate_pptx_in_subfolders(source_version_path, source, target_version_paths[i], target)
 
         # transcript if necessary the source mp3

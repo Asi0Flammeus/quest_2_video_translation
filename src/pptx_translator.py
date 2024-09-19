@@ -1,22 +1,16 @@
-from typing import Optional
-from pptx import Presentation
-from dotenv import load_dotenv
 import os
 import anthropic
 import re
+
+from typing import Optional
+from pptx import Presentation
 from pathlib import Path
 from functools import lru_cache
 from tqdm import tqdm
-from controler import language_codes
+from supported_languages import *
+from config import anthropic_client
 
 translation_cache = {}
-
-parent_dir = Path(__file__).parent.parent
-load_dotenv(dotenv_path=parent_dir / '.env')
-API_KEY_ANTHROPIC = os.getenv('API_KEY_ANTHROPIC')
-client = anthropic.Anthropic(
-    api_key=API_KEY_ANTHROPIC,
-)
 
 def is_exception_text(text: str, source_lang: str, target_lang: str, version: str) -> Optional[str]:
     """
@@ -38,7 +32,7 @@ def is_exception_text(text: str, source_lang: str, target_lang: str, version: st
             - If no exception is found, returns None.
     """
     # Format version to 'v' followed by digits from the version
-    version_formatted = 'v' + ''.join(c for c in version if c.isdigit())
+    version_formatted = 'V.' + ''.join(c for c in version if c.isdigit())
     
     exceptions = [
         f"- {source_lang.upper()}",
@@ -53,10 +47,9 @@ def is_exception_text(text: str, source_lang: str, target_lang: str, version: st
     
     return None
 
-is_exception_text()
 def translate_txt_to(text, language):
     try:
-        message = client.messages.create(
+        message = anthropic_client.messages.create(
             model="claude-3-5-sonnet-20240620",
             max_tokens=2000,
             temperature=0.2,
@@ -107,8 +100,6 @@ def count_total_runs(prs):
 
 def translate_pptx(input_path, output_path, source_lang, target_lang, version, use_exception=False):
     prs = Presentation(input_path)
-    total_runs = count_total_runs(prs)
-    progress_bar = tqdm(total=total_runs, unit='run', desc='Translating')
 
     for slide in prs.slides:
         for shape in slide.shapes:
@@ -121,12 +112,10 @@ def translate_pptx(input_path, output_path, source_lang, target_lang, version, u
                         exception_result = is_exception_text(run.text, source_lang, target_lang, version)
                         if exception_result:
                             run.text = exception_result
-                            progress_bar.update(1)
                             continue
 
                     translated_text = get_translation(run.text, language_codes[target_lang])
                     run.text = translated_text
-                    progress_bar.update(1)
 
-    progress_bar.close()
+        print("slide translated")
     prs.save(output_path)
