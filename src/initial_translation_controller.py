@@ -4,8 +4,10 @@ import re
 import yaml
 import subprocess
 
+from pathlib import Path
 from supported_languages import *
 from pptx_translator import translate_pptx
+from mp3_2_txt import TranscriptionModel 
 
 # Root directory
 ROOT_DIR = "../test/"  # Replace this with your actual root directory path
@@ -149,7 +151,7 @@ def prepare_target_folders(course_dir, source_lang, target_langs, source_version
     source_v001_path = os.path.join(course_dir, source_lang, 'v001')
     if not os.path.exists(source_v001_path):
         print(f"Error: v001 folder not found for source language {source_lang}")
-        return
+        return 
 
     target_version_paths = []
     for target_lang in target_langs:
@@ -173,13 +175,14 @@ def prepare_target_folders(course_dir, source_lang, target_langs, source_version
                 new_version = f'v{new_version_num:03d}'
             
             new_version_path = os.path.join(target_lang_path, new_version)
-            target_version_paths.append(new_version_path)
             os.makedirs(new_version_path)
             
             # Copy structure from source_version
             source_version_path = os.path.join(course_dir, source_lang, source_version)
             copy_folder_structure(source_version_path, new_version_path)
             print(f"Created new version {new_version} for {target_lang}")
+
+        target_version_paths.append(new_version_path)
     return target_version_paths
 
 def convert_pptx_to_png(pptx_path):
@@ -219,11 +222,46 @@ def translate_pptx_in_subfolders(source_version_path, source, target_version_pat
                 target_pptx_path = os.path.join(target_subfolder_path, pptx_file)
 
                 target_version = os.path.basename(os.path.normpath(target_version_path))
-                print(target_pptx_path)
                 translate_pptx(source_pptx_path, target_pptx_path, source, target, target_version, use_exception=True)
                 convert_pptx_to_png(target_pptx_path)
 
                 print(f"Translated {pptx_file} from {source} to {target}")
+
+def any_transcript_exists(directory_path):
+    for filename in os.listdir(directory_path):
+        if filename.endswith('.txt'):
+            return True
+    return False
+
+def replace_language(path, target):
+    parts = path.split(os.sep)
+    
+    if len(parts) >= 3:
+        parts[-2] = target
+        
+        return os.sep.join(parts)
+    else:
+        return path
+
+def transcript_if_necessary(source_version_path):
+   for subfolder in os.listdir(source_version_path):
+        subfolder_path = os.path.join(source_version_path, subfolder)
+
+        if os.path.isdir(subfolder_path):
+            source_slide_path = os.path.join(subfolder_path, 'slides')
+
+            if os.path.isdir(source_slide_path):
+                files = os.listdir(source_slide_path)
+                txt_files = [os.path.splitext(f)[0] for f in files if f.endswith('.txt')]
+                mp3_files = [os.path.splitext(f)[0] for f in files if f.endswith('.mp3')]
+    
+                if len(txt_files) != len(mp3_files):
+                    missing_transcripts = set(mp3_files) - set(txt_files)
+                    for file in missing_transcripts:
+                        print(f"Missing transcript for: {file}.mp3")
+                        model = TranscriptionModel(source_slide_path)
+                        audio_path = f"{source_slide_path}/{file}.mp3"
+                        model.load_and_transcribe_audio(audio_path)
 
 
 if __name__ == "__main__":
@@ -248,10 +286,15 @@ if __name__ == "__main__":
     source_version_path = f"{selected_dir}/{source}/{source_version}"
     target_version_paths = prepare_target_folders(selected_dir, source, targets, source_version)
     for i , target in enumerate(targets):
-        print(i)
-        translate_pptx_in_subfolders(source_version_path, source, target_version_paths[i], target)
+        # translate_pptx_in_subfolders(source_version_path, source, target_version_paths[i], target)
+        transcript_if_necessary(source_version_path)
+
+        
+
 
         # transcript if necessary the source mp3
+            # check if txt exist
+            # if not transcript and put in slide folders
         # translate transcripts 
         # generate audio 
     
