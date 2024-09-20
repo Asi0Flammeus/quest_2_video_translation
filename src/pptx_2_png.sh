@@ -30,7 +30,7 @@ echo "Converting PDF to PNG..."
 for ((i=0; i<NUM_PAGES; i++))
 do
     echo -ne "Converting page $((i+1)) of $NUM_PAGES...\r"
-    convert -density 300 "${PDF_PATH}[$i]" -quality 100 "${OUTPUT_DIR}/${BASE_NAME}_slide_$(printf "%03d" $((i+1))).png"
+    magick convert -density 300 "${PDF_PATH}[$i]" -quality 100 "${OUTPUT_DIR}/${BASE_NAME}_slide_$(printf "%03d" $((i+1))).png"
 done
 echo -ne "\nConversion to PNG completed. Images saved in ${OUTPUT_DIR}\n"
 
