@@ -7,7 +7,8 @@ import subprocess
 from pathlib import Path
 from supported_languages import *
 from pptx_translator import translate_pptx
-from mp3_2_txt import TranscriptionModel 
+from mp3_2_txt import TranscriptionModel
+from txt_translation import translate_txt_to 
 
 # Root directory
 ROOT_DIR = "../test/"  # Replace this with your actual root directory path
@@ -263,6 +264,27 @@ def transcript_if_necessary(source_version_path):
                         audio_path = f"{source_slide_path}/{file}.mp3"
                         model.load_and_transcribe_audio(audio_path)
 
+def translate_transcripts(source_version_path, target, target_version_path):
+    for subfolder in os.listdir(source_version_path):
+        subfolder_path = os.path.join(source_version_path, subfolder)
+        if os.path.isdir(subfolder_path):
+            source_slide_path = os.path.join(subfolder_path, 'slides')
+            if os.path.isdir(source_slide_path):
+                target_slide_path = os.path.join(target_version_path, subfolder, 'slides')
+                os.makedirs(target_slide_path, exist_ok=True)
+
+                for filename in os.listdir(source_slide_path):
+                    if filename.endswith('.txt'):
+                        source_file_path = os.path.join(source_slide_path, filename)
+                        target_file_path = os.path.join(target_slide_path, filename)
+
+                        with open(source_file_path, 'r', encoding='utf-8') as source_file:
+                            content = source_file.read()
+                        translated_content = translate_txt_to(content, target)
+
+                        with open(target_file_path, 'w', encoding='utf-8') as target_file:
+                            target_file.write(translated_content)
+
 
 if __name__ == "__main__":
     print("Welcome to the Course, Language, and Version Selection Tool")
@@ -286,16 +308,10 @@ if __name__ == "__main__":
     source_version_path = f"{selected_dir}/{source}/{source_version}"
     target_version_paths = prepare_target_folders(selected_dir, source, targets, source_version)
     for i , target in enumerate(targets):
-        # translate_pptx_in_subfolders(source_version_path, source, target_version_paths[i], target)
-        transcript_if_necessary(source_version_path)
-
-        
-
-
-        # transcript if necessary the source mp3
-            # check if txt exist
-            # if not transcript and put in slide folders
-        # translate transcripts 
+        target_version_path = target_version_paths[i]
+        # translate_pptx_in_subfolders(source_version_path, source, target_version_path, target)
+        # transcript_if_necessary(source_version_path)
+        translate_transcripts(source_version_path,target, target_version_path)
         # generate audio 
     
 
