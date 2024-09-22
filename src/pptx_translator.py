@@ -1,5 +1,3 @@
-import os
-import anthropic
 import re
 
 from typing import Optional
@@ -8,7 +6,7 @@ from pathlib import Path
 from functools import lru_cache
 from tqdm import tqdm
 from supported_languages import *
-from config import anthropic_client
+from txt_translation import translate_txt_to
 
 translation_cache = {}
 
@@ -47,31 +45,6 @@ def is_exception_text(text: str, source_lang: str, target_lang: str, version: st
     
     return None
 
-def translate_txt_to(text, language):
-    try:
-        message = anthropic_client.messages.create(
-            model="claude-3-5-sonnet-20240620",
-            max_tokens=2000,
-            temperature=0.2,
-            system=f"Your task is to accurately translate this text into {language}. Only output the translation. If there's nothing to translate simply output the original text.",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": f"string to translate:\n {text}"
-                        }
-                    ]
-                }
-            ]
-        )
-        
-        translated_text = message.content[0].text
-        return translated_text
-
-    except Exception as e:
-        raise TranslationError(f"Translation failed: {str(e)}")
 
 class TranslationError(Exception):
     pass
