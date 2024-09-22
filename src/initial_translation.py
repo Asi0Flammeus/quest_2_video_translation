@@ -4,6 +4,7 @@ import re
 import yaml
 import subprocess
 
+from image_audio_2_video import create_video
 from txt_2_mp3 import text_to_speech
 from config import voice_ids
 from supported_languages import *
@@ -295,10 +296,19 @@ def generate_translated_audios(target_version_path):
                 for filename in os.listdir(target_slide_path):
                     if filename.endswith('.txt'):
                         voice = filename.split('.')[-2].split('_')[-1]
-                        # text_to_speech(filename, voice_ids[voice])
-                        print(f"{filename} generated as mp3 with {voice}")
+                        text_to_speech(filename, voice_ids[voice])
 
                     
+def generate_translated_videos(target_version_path):
+    for subfolder in os.listdir(target_version_path):
+        subfolder_path = os.path.join(target_version_path, subfolder)
+        if os.path.isdir(subfolder_path):
+            target_slide_path = os.path.join(subfolder_path, 'slides')
+            if os.path.isdir(target_slide_path):
+                video_path = subfolder_path + f"{subfolder}.mp4" 
+                create_video(target_slide_path, video_path)
+
+
 
 
     
@@ -321,16 +331,17 @@ if __name__ == "__main__":
         print(f"                   {language_codes[target]} ({target})")
     print_separator()
     
-    # Prepare target folders
     source_version_path = f"{selected_dir}/{source}/{source_version}"
     target_version_paths = prepare_target_folders(selected_dir, source, targets, source_version)
     for i , target in enumerate(targets):
         target_version_path = target_version_paths[i]
-        # translate_pptx_in_subfolders(source_versin_path, source, target_version_path, target)
+
+        translate_pptx_in_subfolders(source_versin_path, source, target_version_path, target)
+
         transcript_if_necessary(source_version_path)
         translate_transcripts(source_version_path,target, target_version_path)
+
         generate_translated_audios(target_version_path)
+        generate_translated_videos(target_version_path)
     
 
-    print("Target folders have been prepared.")
-    print("Thank you for using the selection tool!")
