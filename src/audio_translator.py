@@ -54,7 +54,7 @@ HEADERS = {
 }
 
 # Calculate API cost based on the total number of characters in text files
-def calculate_api_cost(folder_name):
+def calculate_api_cost(folder_name)
     folder_path = project_path / folder_name
     text_files = [text_file for text_file in folder_path.rglob("*.txt")]
     total_characters = 0
