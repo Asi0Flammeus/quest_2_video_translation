@@ -4,7 +4,8 @@ import re
 import yaml
 import subprocess
 
-from pathlib import Path
+from txt_2_mp3 import text_to_speech
+from config import voice_ids
 from supported_languages import *
 from pptx_translator import translate_pptx
 from mp3_2_txt import TranscriptionModel
@@ -285,6 +286,22 @@ def translate_transcripts(source_version_path, target, target_version_path):
                         with open(target_file_path, 'w', encoding='utf-8') as target_file:
                             target_file.write(translated_content)
 
+def generate_translated_audios(target_version_path):
+    for subfolder in os.listdir(target_version_path):
+        subfolder_path = os.path.join(target_version_path, subfolder)
+        if os.path.isdir(subfolder_path):
+            target_slide_path = os.path.join(subfolder_path, 'slides')
+            if os.path.isdir(target_slide_path):
+                for filename in os.listdir(target_slide_path):
+                    if filename.endswith('.txt'):
+                        voice = filename.split('.')[-2].split('_')[-1]
+                        # text_to_speech(filename, voice_ids[voice])
+                        print(f"{filename} generated as mp3 with {voice}")
+
+                    
+
+
+    
 
 if __name__ == "__main__":
     print("Welcome to the Course, Language, and Version Selection Tool")
@@ -309,10 +326,10 @@ if __name__ == "__main__":
     target_version_paths = prepare_target_folders(selected_dir, source, targets, source_version)
     for i , target in enumerate(targets):
         target_version_path = target_version_paths[i]
-        # translate_pptx_in_subfolders(source_version_path, source, target_version_path, target)
-        # transcript_if_necessary(source_version_path)
+        # translate_pptx_in_subfolders(source_versin_path, source, target_version_path, target)
+        transcript_if_necessary(source_version_path)
         translate_transcripts(source_version_path,target, target_version_path)
-        # generate audio 
+        generate_translated_audios(target_version_path)
     
 
     print("Target folders have been prepared.")
