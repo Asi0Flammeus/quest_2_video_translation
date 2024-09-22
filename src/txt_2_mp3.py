@@ -1,13 +1,11 @@
+import os
+from pathlib import Path
 import requests
-from config import ELEVENLABS_API_KEY, VOICE_IDS
 
+from config import HEADERS
 
-HEADERS = {
-    "Accept": "application/json",
-    "xi-api-key": ELEVENLABS_API_KEY,
-    "Content-Type": "application/json"
-}
 def text_to_speech(text_filepath, voice_id):
+    text_filepath = Path(text_filepath)
     output_path = text_filepath.with_suffix(".mp3")
     if output_path.exists():
         print(f"Skipping {output_path}, file already exists.")
