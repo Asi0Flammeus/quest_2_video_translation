@@ -192,5 +192,3 @@ class TranscriptionModel:
         return transcript
 
 
-
-# TODO: change the save process to a given path 
