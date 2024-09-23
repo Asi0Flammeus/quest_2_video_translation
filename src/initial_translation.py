@@ -258,7 +258,7 @@ def translate_transcripts(source_version_path, target, target_version_path):
 
 def generate_translated_audios(target_version_path):
     subfolders = [f for f in os.listdir(target_version_path) if os.path.isdir(os.path.join(target_version_path, f))]
-    for subfolder in subfolders
+    for subfolder in subfolders:
         subfolder_path = os.path.join(target_version_path, subfolder)
         target_slide_path = os.path.join(subfolder_path, 'slides')
         if os.path.isdir(target_slide_path):
