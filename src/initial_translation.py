@@ -3,6 +3,7 @@ import os
 import re
 import yaml
 import subprocess
+from tqdm import tqdm
 
 from image_audio_2_video import create_video
 from txt_2_mp3 import text_to_speech
@@ -140,7 +141,6 @@ def select_languages(course_dir):
             return source_lang, target_langs
         print("Source language cannot be in target languages. Please try again.")
 
-
 def prepare_target_folders(course_dir, source_lang, target_langs, source_version):
     def copy_folder_structure(src, dst):
         for item in os.listdir(src):
@@ -197,121 +197,84 @@ def convert_pptx_to_png(pptx_path):
 
     command = ['/bin/bash', bash_script_path, pptx_path]
     try:
-        result = subprocess.run(command, check=True, text=True, capture_output=True)
-        print(result.stdout)
-        if result.stderr:
-            print("Errors:")
-            print(result.stderr)
-    
+        subprocess.run(command, check=True, text=True, capture_output=True)
     except subprocess.CalledProcessError as e:
         print(f"Error running the script: {e}")
-        if e.output:
-            print("Output:")
-            print(e.output)
-        if e.stderr:
-            print("Error output:")
-            print(e.stderr)
 
 def translate_pptx_in_subfolders(source_version_path, source, target_version_path, target):
-    for subfolder in os.listdir(source_version_path):
+    subfolders = [f for f in os.listdir(source_version_path) if os.path.isdir(os.path.join(source_version_path, f))]
+    for subfolder in tqdm(subfolders, desc="Translating PowerPoint files", unit="folder"):
         subfolder_path = os.path.join(source_version_path, subfolder)
-        if os.path.isdir(subfolder_path):
-            pptx_file = f"{subfolder}.pptx"
-            source_pptx_path = os.path.join(subfolder_path, pptx_file)
+        pptx_file = f"{subfolder}.pptx"
+        source_pptx_path = os.path.join(subfolder_path, pptx_file)
 
-            if os.path.exists(source_pptx_path):
-                target_subfolder_path = os.path.join(target_version_path, subfolder)
-                os.makedirs(target_subfolder_path, exist_ok=True)
-                target_pptx_path = os.path.join(target_subfolder_path, pptx_file)
+        if os.path.exists(source_pptx_path):
+            target_subfolder_path = os.path.join(target_version_path, subfolder)
+            os.makedirs(target_subfolder_path, exist_ok=True)
+            target_pptx_path = os.path.join(target_subfolder_path, pptx_file)
 
-                target_version = os.path.basename(os.path.normpath(target_version_path))
-                translate_pptx(source_pptx_path, target_pptx_path, source, target, target_version, use_exception=True)
-                convert_pptx_to_png(target_pptx_path)
-
-                print(f"Translated {pptx_file} from {source} to {target}")
-
-def any_transcript_exists(directory_path):
-    for filename in os.listdir(directory_path):
-        if filename.endswith('.txt'):
-            return True
-    return False
-
-def replace_language(path, target):
-    parts = path.split(os.sep)
-    
-    if len(parts) >= 3:
-        parts[-2] = target
-        
-        return os.sep.join(parts)
-    else:
-        return path
+            target_version = os.path.basename(os.path.normpath(target_version_path))
+            translate_pptx(source_pptx_path, target_pptx_path, source, target, target_version, use_exception=True)
+            convert_pptx_to_png(target_pptx_path)
 
 def transcript_if_necessary(source_version_path):
-   for subfolder in os.listdir(source_version_path):
+    subfolders = [f for f in os.listdir(source_version_path) if os.path.isdir(os.path.join(source_version_path, f))]
+    for subfolder in subfolders:
         subfolder_path = os.path.join(source_version_path, subfolder)
+        source_slide_path = os.path.join(subfolder_path, 'slides')
 
-        if os.path.isdir(subfolder_path):
-            source_slide_path = os.path.join(subfolder_path, 'slides')
+        if os.path.isdir(source_slide_path):
+            files = os.listdir(source_slide_path)
+            txt_files = [os.path.splitext(f)[0] for f in files if f.endswith('.txt')]
+            mp3_files = [os.path.splitext(f)[0] for f in files if f.endswith('.mp3')]
 
-            if os.path.isdir(source_slide_path):
-                files = os.listdir(source_slide_path)
-                txt_files = [os.path.splitext(f)[0] for f in files if f.endswith('.txt')]
-                mp3_files = [os.path.splitext(f)[0] for f in files if f.endswith('.mp3')]
-    
-                if len(txt_files) != len(mp3_files):
-                    missing_transcripts = set(mp3_files) - set(txt_files)
-                    for file in missing_transcripts:
-                        print(f"Missing transcript for: {file}.mp3")
-                        model = TranscriptionModel(source_slide_path)
-                        audio_path = f"{source_slide_path}/{file}.mp3"
-                        model.load_and_transcribe_audio(audio_path)
+            missing_transcripts = set(mp3_files) - set(txt_files)
+            if missing_transcripts:
+                model = TranscriptionModel(source_slide_path)
+                for file in tqdm(missing_transcripts, desc="Transcribing audio files", unit="file"):
+                    audio_path = f"{source_slide_path}/{file}.mp3"
+                    model.load_and_transcribe_audio(audio_path)
 
 def translate_transcripts(source_version_path, target, target_version_path):
-    for subfolder in os.listdir(source_version_path):
+    subfolders = [f for f in os.listdir(source_version_path) if os.path.isdir(os.path.join(source_version_path, f))]
+    for subfolder in subfolders:
         subfolder_path = os.path.join(source_version_path, subfolder)
-        if os.path.isdir(subfolder_path):
-            source_slide_path = os.path.join(subfolder_path, 'slides')
-            if os.path.isdir(source_slide_path):
-                target_slide_path = os.path.join(target_version_path, subfolder, 'slides')
-                os.makedirs(target_slide_path, exist_ok=True)
+        source_slide_path = os.path.join(subfolder_path, 'slides')
+        if os.path.isdir(source_slide_path):
+            target_slide_path = os.path.join(target_version_path, subfolder, 'slides')
+            os.makedirs(target_slide_path, exist_ok=True)
 
-                for filename in os.listdir(source_slide_path):
-                    if filename.endswith('.txt'):
-                        source_file_path = os.path.join(source_slide_path, filename)
-                        target_file_path = os.path.join(target_slide_path, filename)
+            txt_files = [f for f in os.listdir(source_slide_path) if f.endswith('.txt')]
+            for filename in tqdm(txt_files, desc="Transcribing audio files", unit="file"):
+                source_file_path = os.path.join(source_slide_path, filename)
+                target_file_path = os.path.join(target_slide_path, filename)
 
-                        with open(source_file_path, 'r', encoding='utf-8') as source_file:
-                            content = source_file.read()
-                        translated_content = translate_txt_to(content, target)
+                with open(source_file_path, 'r', encoding='utf-8') as source_file:
+                    content = source_file.read()
+                translated_content = translate_txt_to(content, target)
 
-                        with open(target_file_path, 'w', encoding='utf-8') as target_file:
-                            target_file.write(translated_content)
+                with open(target_file_path, 'w', encoding='utf-8') as target_file:
+                    target_file.write(translated_content)
 
 def generate_translated_audios(target_version_path):
-    for subfolder in os.listdir(target_version_path):
+    subfolders = [f for f in os.listdir(target_version_path) if os.path.isdir(os.path.join(target_version_path, f))]
+    for subfolder in subfolders
         subfolder_path = os.path.join(target_version_path, subfolder)
-        if os.path.isdir(subfolder_path):
-            target_slide_path = os.path.join(subfolder_path, 'slides')
-            if os.path.isdir(target_slide_path):
-                for filename in os.listdir(target_slide_path):
-                    if filename.endswith('.txt'):
-                        voice = filename.split('.')[-2].split('_')[-1]
-                        text_to_speech(filename, voice_ids[voice])
+        target_slide_path = os.path.join(subfolder_path, 'slides')
+        if os.path.isdir(target_slide_path):
+            for filename in tqdm(os.listdir(target_slide_path), desc="Generating audio files", unit="file"):
+                if filename.endswith('.txt'):
+                    voice = filename.split('.')[-2].split('_')[-1]
+                    text_to_speech(filename, voice_ids[voice])
 
-                    
 def generate_translated_videos(target_version_path):
-    for subfolder in os.listdir(target_version_path):
+    subfolders = [f for f in os.listdir(target_version_path) if os.path.isdir(os.path.join(target_version_path, f))]
+    for subfolder in tqdm(subfolders, desc="Generating videos", unit="folder"):
         subfolder_path = os.path.join(target_version_path, subfolder)
-        if os.path.isdir(subfolder_path):
-            target_slide_path = os.path.join(subfolder_path, 'slides')
-            if os.path.isdir(target_slide_path):
-                video_path = subfolder_path + f"{subfolder}.mp4" 
-                create_video(target_slide_path, video_path)
-
-
-
-
-    
+        target_slide_path = os.path.join(subfolder_path, 'slides')
+        if os.path.isdir(target_slide_path):
+            video_path = os.path.join(subfolder_path, f"{subfolder}.mp4")
+            create_video(target_slide_path, video_path)
 
 if __name__ == "__main__":
     print("Welcome to the Course, Language, and Version Selection Tool")
@@ -331,17 +294,24 @@ if __name__ == "__main__":
         print(f"                   {language_codes[target]} ({target})")
     print_separator()
     
-    source_version_path = f"{selected_dir}/{source}/{source_version}"
+    source_version_path = os.path.join(selected_dir, source, source_version)
     target_version_paths = prepare_target_folders(selected_dir, source, targets, source_version)
-    for i , target in enumerate(targets):
+    for i, target in enumerate(targets):
         target_version_path = target_version_paths[i]
+        
+        print(f"\nProcessing target language: {language_codes[target]} ({target})")
+        print_separator()
 
-        translate_pptx_in_subfolders(source_versin_path, source, target_version_path, target)
-
+        translate_pptx_in_subfolders(source_version_path, source, target_version_path, target)
+        
         transcript_if_necessary(source_version_path)
-        translate_transcripts(source_version_path,target, target_version_path)
-
+        translate_transcripts(source_version_path, target, target_version_path)
+        
         generate_translated_audios(target_version_path)
         generate_translated_videos(target_version_path)
-    
+        
+        print(f"Completed processing for {language_codes[target]} ({target})")
+        print_separator()
 
+    print("\nTranslation process completed for all target languages.")
+    print_separator("=")
