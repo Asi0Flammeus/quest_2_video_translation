@@ -30,7 +30,7 @@ NUM_PAGES=$(pdfinfo "$PDF_PATH" | grep 'Pages' | awk '{print $2}')
 for ((i=0; i<NUM_PAGES; i++))
 do
     # echo -ne "Converting page $((i+1)) of $NUM_PAGES...\r"
-    magick convert -density 300 "${PDF_PATH}[$i]" -quality 100 "${OUTPUT_DIR}/${BASE_NAME}.$(printf "%02d" $((i))).png"
+    magick convert -density 300 "${PDF_PATH}[$i]" -quality 100 "${OUTPUT_DIR}/${BASE_NAME}.$(printf "%02d" $((i+1))).png"
 done
 # echo -ne "\nConversion to PNG completed. Images saved in ${OUTPUT_DIR}\n"
 
