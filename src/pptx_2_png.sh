@@ -17,22 +17,22 @@ mkdir -p "$OUTPUT_DIR"
 BASE_NAME=$(basename "$PPTX_PATH" .pptx)
 
 # Convert PPTX to PDF using LibreOffice
-echo "Converting PPTX to PDF..."
+# echo "Converting PPTX to PDF..."
 libreoffice --headless --convert-to pdf --outdir "$OUTPUT_DIR" "$PPTX_PATH"
 PDF_PATH="${OUTPUT_DIR}/${BASE_NAME}.pdf"
-echo "PDF conversion completed."
+# echo "PDF conversion completed."
 
 # Get number of pages in the PDF using pdfinfo
 NUM_PAGES=$(pdfinfo "$PDF_PATH" | grep 'Pages' | awk '{print $2}')
 
 # Convert PDF to PNG using ImageMagick's convert
-echo "Converting PDF to PNG..."
+# echo "Converting PDF to PNG..."
 for ((i=0; i<NUM_PAGES; i++))
 do
-    echo -ne "Converting page $((i+1)) of $NUM_PAGES...\r"
+    # echo -ne "Converting page $((i+1)) of $NUM_PAGES...\r"
     magick convert -density 300 "${PDF_PATH}[$i]" -quality 100 "${OUTPUT_DIR}/${BASE_NAME}.$(printf "%02d" $((i))).png"
 done
-echo -ne "\nConversion to PNG completed. Images saved in ${OUTPUT_DIR}\n"
+# echo -ne "\nConversion to PNG completed. Images saved in ${OUTPUT_DIR}\n"
 
 # Clean up the temporary PDF file
 rm "$PDF_PATH"

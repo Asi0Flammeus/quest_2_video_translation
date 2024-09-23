@@ -162,7 +162,7 @@ class TranscriptionModel:
             with open(transcript_file, 'r') as f:
                 transcript_text = f.read()
             self.transcript = transcript_text
-            print("already there")
+            # print("already there")
             while self.audio_files:
                 if sub_audio_file:
                     os.remove(self.audio_files[0])
@@ -187,7 +187,7 @@ class TranscriptionModel:
     def load_and_transcribe_audio(self, audio_file):
         self.load_audio(audio_file)
         transcript = self.transcribe_multiple_chunks_audio()
-        print("Transcript done!")
+        # print("Transcript done!")
 
         return transcript
 

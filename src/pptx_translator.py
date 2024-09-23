@@ -90,5 +90,4 @@ def translate_pptx(input_path, output_path, source_lang, target_lang, version, u
                     translated_text = get_translation(run.text, language_codes[target_lang])
                     run.text = translated_text
 
-        print("slide translated")
     prs.save(output_path)

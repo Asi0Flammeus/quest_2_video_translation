@@ -42,7 +42,7 @@ def translate_txt_to(text, language):
         translated_chunks = []
         
         for i, chunk in enumerate(chunks):
-            print(f"Translating in progress ... [{i+1}/{len(chunks)}]")
+            # print(f"Translating in progress ... [{i+1}/{len(chunks)}]")
             #TODO: Replace this part with function for get_translation_from_claude 
             # and write another one for openai
             message = anthropic_client.messages.create(
