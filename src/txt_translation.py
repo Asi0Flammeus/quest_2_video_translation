@@ -36,39 +36,53 @@ def split_text(text, max_tokens=1750):
     
     return chunks
 
-def translate_txt_to(text, language):
-    try:
-        chunks = split_text(text)
-        translated_chunks = []
-        
-        for i, chunk in enumerate(chunks):
-            # print(f"Translating in progress ... [{i+1}/{len(chunks)}]")
-            #TODO: Replace this part with function for get_translation_from_claude 
-            # and write another one for openai
-            message = anthropic_client.messages.create(
-                model="claude-3-5-sonnet-20240620",
-                max_tokens=5000,
-                temperature=0.2,
-                system=f"Your task is to accurately translate this text into {language}. Only output the translation. If there's nothing to translate simply output the original text.",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": f"string to translate:\n {chunk}"
-                            }
-                        ]
-                    }
-                ]
-            )
+def translate_txt_to(text, language, max_retries=10, retry_delay=5):
+    chunks = split_text(text)
+    translated_chunks = []
+    
+    for i, chunk in enumerate(chunks):
+        for attempt in range(max_retries):
+            try:
+                message = anthropic_client.messages.create(
+                    model="claude-3-5-sonnet-20240620",
+                    max_tokens=5000,
+                    temperature=0.2,
+                    system=f"Your task is to accurately translate this text into {language}. Only output the translation. If there's nothing to translate simply output the original text.",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": f"string to translate:\n {chunk}"
+                                }
+                            ]
+                        }
+                    ]
+                )
+                
+                translated_chunk = message.content[0].text
+                translated_chunks.append(translated_chunk)
+                print(f"Chunk {i+1}/{len(chunks)} translated successfully.")
+                break  # Break the retry loop if successful
             
-            translated_chunk = message.content[0].text
-            translated_chunks.append(translated_chunk)
-        
-        return " ".join(translated_chunks)
-    except Exception as e:
-        raise TranslationError(f"Translation failed: {str(e)}")
+            except anthropic.APIError as e:
+                print(f"API error on chunk {i+1}/{len(chunks)}, attempt {attempt+1}/{max_retries}: {str(e)}")
+                if attempt < max_retries - 1:
+                    print(f"Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                else:
+                    raise TranslationError(f"Translation failed for chunk {i+1}/{len(chunks)} after {max_retries} attempts. Last error: {str(e)}")
+            
+            except Exception as e:
+                print(f"Unexpected error on chunk {i+1}/{len(chunks)}, attempt {attempt+1}/{max_retries}: {str(e)}")
+                if attempt < max_retries - 1:
+                    print(f"Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                else:
+                    raise TranslationError(f"Unexpected error occurred for chunk {i+1}/{len(chunks)} after {max_retries} attempts. Last error: {str(e)}")
+    
+    return " ".join(translated_chunks)
 
 def save_translation(content, path):
     with open(path, 'w', encoding='utf-8') as file:
