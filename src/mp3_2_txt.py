@@ -121,39 +121,60 @@ class TranscriptionModel:
         else:
             self.audio_files.append(file_path)
 
-    def transcribe_audio(self):
+    def transcribe_audio(self, max_retries=10, retry_delay=5):
         """
-        Transcribes the audio data using OpenAI's Whisper API.
+        Transcribes the audio data using OpenAI's Whisper API with error handling and retries.
+
+        Args:
+            max_retries (int): Maximum number of retry attempts (default: 10)
+            retry_delay (int): Delay in seconds between retry attempts (default: 5)
+
         Returns:
             str: The transcript of the audio data in text format.
+
+        Raises:
+            Exception: If transcription fails after all retry attempts.
         """
         if not self.audio_files:
             raise ValueError("No audio files have been loaded.")
 
         file_path = self.audio_files[0]
-        audio_file = open(file_path, "rb")
-        transcript = openai.Audio.transcribe("whisper-1", audio_file)
-        audio_file.close()
+        
+        for attempt in range(max_retries):
+            try:
+                with open(file_path, "rb") as audio_file:
+                    transcript = openai.Audio.transcribe("whisper-1", audio_file)
+                
+                # Extract the transcript text
+                transcript_text = transcript["text"]
+                return transcript_text
 
-        # Extract the transcript text
-        transcript_text = transcript["text"]
+            except (RateLimitError, Timeout, APIError) as e:
+                print(f"Attempt {attempt + 1} failed: {str(e)}")
+                if attempt < max_retries - 1:
+                    print(f"Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                else:
+                    raise Exception(f"Transcription failed after {max_retries} attempts. Last error: {str(e)}")
 
-        return transcript_text
-
-    def transcribe_multiple_chunks_audio(self):
+    def transcribe_multiple_chunks_audio(self, max_retries=10, retry_delay=5):
         """
-        Transcribes all the audio chunks into a single transcript
+        Transcribes all the audio chunks into a single transcript with error handling and retries.
+
+        Args:
+            max_retries (int): Maximum number of retry attempts (default: 10)
+            retry_delay (int): Delay in seconds between retry attempts (default: 5)
 
         Returns:
             str: The transcript of the audio data in text format.
+
+        Raises:
+            Exception: If transcription fails after all retry attempts for any chunk.
         """
         if not self.audio_files:
             raise ValueError("No audio files have been loaded.")
 
-        if len(self.audio_files) > 1:
-            sub_audio_file = True
-        else:
-            sub_audio_file = False
+        sub_audio_file = len(self.audio_files) > 1
 
         file_path = self.original_audio_file[0]
         transcript_file = f"./outputs/{os.path.splitext(os.path.basename(file_path))[0]}_French_transcript.txt"
@@ -162,7 +183,6 @@ class TranscriptionModel:
             with open(transcript_file, 'r') as f:
                 transcript_text = f.read()
             self.transcript = transcript_text
-            # print("already there")
             while self.audio_files:
                 if sub_audio_file:
                     os.remove(self.audio_files[0])
@@ -172,23 +192,22 @@ class TranscriptionModel:
         transcript_texts = []
 
         while self.audio_files:
-            transcript_text = self.transcribe_audio()
-            transcript_texts.append(transcript_text)
-            if sub_audio_file:
-                os.remove(self.audio_files[0])
-            self.audio_files.pop(0)
+            try:
+                transcript_text = self.transcribe_audio(max_retries, retry_delay)
+                transcript_texts.append(transcript_text)
+            except Exception as e:
+                raise Exception(f"Failed to transcribe audio chunk: {str(e)}")
+            finally:
+                if sub_audio_file:
+                    os.remove(self.audio_files[0])
+                self.audio_files.pop(0)
 
-        self.transcript =  "".join(transcript_texts)
+        self.transcript = "".join(transcript_texts)
         self.save_text(self.transcript, "")
 
         return self.transcript
 
-
-    def load_and_transcribe_audio(self, audio_file):
+    def load_and_transcribe_audio(self, audio_file, max_retries=10, retry_delay=5):
         self.load_audio(audio_file)
-        transcript = self.transcribe_multiple_chunks_audio()
-        # print("Transcript done!")
-
+        transcript = self.transcribe_multiple_chunks_audio(max_retries, retry_delay)
         return transcript
-
-
