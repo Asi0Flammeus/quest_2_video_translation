@@ -14,7 +14,7 @@ def text_to_speech(text_filepath, voice_id):
     tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream"
     data = {
         "text": text_to_speak,
-        "model_id": "eleven_multilingual_v2",
+        "model_id": "eleven_multilingual_v2_5",
         "voice_settings": {
             "stability": 0.5,
             "similarity_boost": 0.8,
