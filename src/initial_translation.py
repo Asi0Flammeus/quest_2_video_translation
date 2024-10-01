@@ -207,6 +207,7 @@ def convert_pptx_to_png(pptx_path):
 
 def translate_pptx_in_subfolders(source_version_path, source, target_version_path, target):
     subfolders = [f for f in os.listdir(source_version_path) if os.path.isdir(os.path.join(source_version_path, f)) and "-DNT" not in f]
+    subfolders = sorted(subfolders)
     for subfolder in tqdm(subfolders, desc=f"Translating PowerPoint", unit="folder"):
         subfolder_path = os.path.join(source_version_path, subfolder)
         pptx_file = f"{subfolder}.pptx"
@@ -284,6 +285,7 @@ def generate_translated_audios(target_version_path):
 
 def generate_translated_videos(target_version_path):
     subfolders = [f for f in os.listdir(target_version_path) if os.path.isdir(os.path.join(target_version_path, f)) and "-DNT" not in f]
+    subfolders = sorted(subfolders)
     for subfolder in tqdm(subfolders, desc=f"Generating videos", unit="folder"):
         subfolder_path = os.path.join(target_version_path, subfolder)
         target_slide_path = os.path.join(subfolder_path, 'slides')
