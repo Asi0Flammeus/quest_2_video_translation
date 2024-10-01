@@ -47,7 +47,7 @@ def translate_txt_to(text, language, max_retries=10, retry_delay=5):
                     model="claude-3-5-sonnet-20240620",
                     max_tokens=5000,
                     temperature=0.2,
-                    system=f"Your task is to accurately translate this text into {language}. Only output the translation. If there's nothing to translate simply output the original text.",
+                    system=f"You are an professional translation software. Translate this text into {language}. You MUST only output the translation, nothing else. If there's nothing to translate simply output the original text.",
                     messages=[
                         {
                             "role": "user",
