@@ -7,8 +7,6 @@ from config import HEADERS
 def text_to_speech(text_filepath, voice_id, max_retries=10, retry_delay=5):
     text_filepath = Path(text_filepath)
     output_path = text_filepath.with_suffix(".mp3")
-    if output_path.exists():
-        return
 
     text_to_speak = text_filepath.read_text()
     tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream"
