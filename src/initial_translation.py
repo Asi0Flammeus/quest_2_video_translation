@@ -51,7 +51,7 @@ def get_language_choice(prompt, multiple=False, default=None):
         except (ValueError, IndexError):
             print("Please enter valid number(s).")
 
-def select_directory():
+def select_directory(ROOT_DIR):
     subdirs = [d for d in os.listdir(ROOT_DIR) if os.path.isdir(os.path.join(ROOT_DIR, d))]
     
     if not subdirs:
@@ -300,7 +300,7 @@ if __name__ == "__main__":
     print("Welcome to the Course, Language, and Version Selection Tool")
     print_separator("=")
     
-    selected_dir = select_directory()
+    selected_dir = select_directory(ROOT_DIR)
     source, targets = select_languages(selected_dir)
     source_version = select_source_version(selected_dir, source)
     
