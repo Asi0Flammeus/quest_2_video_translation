@@ -42,7 +42,7 @@ def create_video(directory, output_path, target_chunk_duration=60, max_chunk_siz
     audio_files = [f for f in files if f.lower().endswith('.mp3')]
 
     chunk_size = calculate_chunk_size(directory, audio_files, target_chunk_duration, max_chunk_size)
-    print(f"Calculated chunk size: {chunk_size}")
+    # print(f"Calculated chunk size: {chunk_size}")
 
     if len(image_files) == len(audio_files):
         clips = create_clips_equal(directory, image_files, audio_files, chunk_size)
@@ -51,7 +51,7 @@ def create_video(directory, output_path, target_chunk_duration=60, max_chunk_siz
 
     final_clip = None
     for i, chunk in enumerate(clips):
-        print(f"Processing chunk {i+1}")
+        # print(f"Processing chunk {i+1}")
         if final_clip is None:
             final_clip = chunk
         else:
@@ -64,7 +64,7 @@ def create_video(directory, output_path, target_chunk_duration=60, max_chunk_siz
     if final_clip is None:
         raise ValueError("No valid clips were created. Check your input files.")
 
-    print("Writing final video file")
+    # print("Writing final video file")
     final_clip.write_videofile(output_path, codec='libx264', fps=1.0, threads=4)
     final_clip.close()
 
