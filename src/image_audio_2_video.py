@@ -7,9 +7,10 @@ def limit_resources():
     # Get the current process
     current_process = psutil.Process()
 
-    # Set the resource limits to 66% of the machine's capacity
-    ram_limit = psutil.virtual_memory().total * 0.66
-    cpu_limit = psutil.cpu_count() * 0.66
+    # Set the resource limits to a % of the machine's capacity
+    factor = 0.50
+    ram_limit = psutil.virtual_memory().total * factor 
+    cpu_limit = psutil.cpu_count() * factor
 
     # Set the resource limits for the current process
     current_process.rlimit(psutil.RLIMIT_AS, (ram_limit, ram_limit))
