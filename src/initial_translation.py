@@ -53,6 +53,7 @@ def get_language_choice(prompt, multiple=False, default=None):
 
 def select_directory(ROOT_DIR):
     subdirs = [d for d in os.listdir(ROOT_DIR) if os.path.isdir(os.path.join(ROOT_DIR, d))]
+    subdirs = sorted(subdirs)
     
     if not subdirs:
         print("No subdirectories found in the root directory.")
