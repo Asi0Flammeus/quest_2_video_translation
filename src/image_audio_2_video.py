@@ -1,7 +1,7 @@
 import os
 import re
 import psutil
-from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
+from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips, AudioClip
 
 def limit_resources():
     # Get the current process
