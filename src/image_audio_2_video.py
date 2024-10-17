@@ -1,7 +1,7 @@
 import os
 import re
 import psutil
-from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips, concatenate_audioclips, CompositeAudioClip
+from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips, concatenate_audioclips, CompositeAudioClip, AudioClip
 
 def limit_resources():
     # Get the current process
@@ -26,7 +26,7 @@ def create_video(directory, output_path):
             image_path = os.path.join(directory, img)
             audio_path = os.path.join(directory, aud)
             audio_clip = AudioFileClip(audio_path)
-            silent_clip = AudioFileClip.silent(duration=0.5)
+            silent_clip = AudioClip(lambda t: 0, duration=0.5)
             extended_audio = concatenate_audioclips([audio_clip, silent_clip])
             video_clip = ImageClip(image_path).set_duration(extended_audio.duration).set_audio(extended_audio)
             clips.append(video_clip)
