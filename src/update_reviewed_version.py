@@ -7,7 +7,7 @@ from initial_translation import convert_pptx_to_png, print_separator, select_dir
 from txt_2_mp3 import text_to_speech
 
 
-ROOT_DIR = "../test/"  # Replace this with your actual root directory path
+ROOT_DIR = "../../../course-translation/V3"
 
 def calculate_sha256(file_path):
     sha256_hash = hashlib.sha256()
