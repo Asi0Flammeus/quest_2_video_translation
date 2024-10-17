@@ -29,7 +29,9 @@ def create_video(directory, output_path):
             image_path = os.path.join(directory, img)
             audio_path = os.path.join(directory, aud)
             audio_clip = AudioFileClip(audio_path)
-            video_clip = ImageClip(image_path).set_duration(audio_clip.duration).set_audio(audio_clip)
+            silent_clip = AudioClip(lambda t: 0, duration=0.5)
+            extended_audio = concatenate_videoclips([audio_clip, silent_clip])
+            video_clip = ImageClip(image_path).set_duration(extended_audio.duration).set_audio(extended_audio)
             clips.append(video_clip)
     else:
         raise ValueError("Invalid number of images and audio files. Should be equal.")
